@@ -20,8 +20,7 @@ def index():
     if request.method == "POST":
         form_content = request.form["content"]
         new_task = Todo(content = form_content)
-        print(new_task)
-        # add to database
+
         try:
            db.session.add(new_task) 
            db.session.commit()
@@ -29,7 +28,39 @@ def index():
         except Exception as e:
             return 'There was an issue adding your task ' + str(e)
     else:
-        return render_template('index.html')
+        tasks = Todo.query.order_by(Todo.date_created).all()
+        return render_template('index.html', tasks=tasks)
+        
+@app.route('/update/<int:id>', methods=['GET', 'POST'])
+def update(id):
+    if request.method == 'POST':
+        task = Todo.query.get_or_404(id)
+        task.content = request.form['content']
+        try: 
+            db.session.commit()
+            return redirect('/')
+        except Exception as e:
+            return e
+        
+
+        try:
+            return 'something good happened'
+        except Exception as e:
+            return 'Error: ' + str(e)
+
+    else:
+        return render_template('update.html', id=id)
+
+@app.route('/delete/<int:id>')
+def delete(id):
+    task_to_delete = Todo.query.get_or_404(id)
+
+    try:
+        db.session.delete(task_to_delete)
+        db.session.commit()
+        return redirect('/')
+    except Exception as e:
+        return 'Error: ' + str(e)
 
 if __name__ == "__main__":
     app.run(debug=True)
